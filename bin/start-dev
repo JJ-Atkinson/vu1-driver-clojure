@@ -1,0 +1,2 @@
+#!/bin/sh
+clojure -A:dev:test:local/devtools
