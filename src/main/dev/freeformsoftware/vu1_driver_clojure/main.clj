@@ -244,3 +244,11 @@
                        "```"))
                 doc))
          dial-api-paths))))
+
+(execute! {::input    {::background-image (jio/file "test2.png")
+                       ::value 30 
+                       ::background-color [100 0 100 0]}
+           ::dial-uid "400028000650564139323920"
+           ::uri      "localhost"
+           ::port     5340
+           ::api-key  api-key})
