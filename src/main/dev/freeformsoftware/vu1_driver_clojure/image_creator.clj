@@ -2,19 +2,11 @@
   (:require
    [clojure.java.io :as jio])
   (:import
-   (java.awt.image BufferedImage)
    (java.awt Color Font Graphics)
    (java.awt.font TextAttribute)
    (javax.imageio ImageIO)
    (java.nio.file Files CopyOption StandardCopyOption)))
 
-
-(def fan-speed
-  (ImageIO/read
-   (jio/file "/home/jarrett/Downloads/image_pack/fan-speed.png")))
-
-(def font-sprite-lookup
-  "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789:.")
 
 (defn load-font
   [file size kerning-modifier]
