@@ -3,6 +3,7 @@
    [clj-http.client :as client]
    [clojure.set :as set]
    [clojure.java.io :as jio]
+   [clojure.pprint :as pprint]
    [malli.core :as mc]
    [malli.util :as mu]
    [taoensso.encore :as enc])
@@ -49,6 +50,7 @@
                  {})}
    {::input    #{}
     ::output   #{::status}
+    ::doc      "Query for the status from the driver"
     ::execute! (fn [params]
                  {::status (-> (client/get
                                 (make-v0-dial-path-prefix
@@ -60,7 +62,7 @@
 
    {::input    #{::name}
     ::output   #{}
-    ::doc      "A thirty character string denoting the UI name for a dial"
+    ::doc      "A max thirty character string denoting the UI name for a dial"
     ::spec     [:map
                 [::name
                  [:and string?
@@ -225,4 +227,20 @@
              ::outputs  [::status ::easing-config]
              ::dial-uid "840033000650564139323920"
              ::api-key  api-key})
-)
+
+
+  (println
+   (clojure.string/join
+    "\n\n"
+    (map (fn [{::keys [input output doc spec]}]
+           (str "### "
+                (if (seq input) "Input: " "Output: ")
+                "`"
+                (pr-str (or (when (seq input) input) output))
+                (when spec
+                  (str "\n\n```\n"
+                       (with-out-str (pprint/pprint spec))
+                       "```"))
+                "`\n\n"
+                doc))
+         dial-api-paths))))
