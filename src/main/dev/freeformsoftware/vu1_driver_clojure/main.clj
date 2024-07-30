@@ -237,10 +237,10 @@
                 (if (seq input) "Input: " "Output: ")
                 "`"
                 (pr-str (or (when (seq input) input) output))
+                "`\n\n"
                 (when spec
                   (str "\n\n```\n"
                        (with-out-str (pprint/pprint spec))
                        "```"))
-                "`\n\n"
                 doc))
          dial-api-paths))))

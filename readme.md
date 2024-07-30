@@ -1,4 +1,4 @@
-### Input: `#{:dev.freeformsoftware.vu1-driver-clojure.main/value}
+### Input: `#{:dev.freeformsoftware.vu1-driver-clojure.main/value}`
 
 ```
 [:map
@@ -12,7 +12,7 @@ A 0-100 value
 
 
 
-### Input: `#{:dev.freeformsoftware.vu1-driver-clojure.main/name}
+### Input: `#{:dev.freeformsoftware.vu1-driver-clojure.main/name}`
 
 ```
 [:map
@@ -25,7 +25,7 @@ A 0-100 value
 
 A thirty character string denoting the UI name for a dial
 
-### Input: `#{:dev.freeformsoftware.vu1-driver-clojure.main/background-color}
+### Input: `#{:dev.freeformsoftware.vu1-driver-clojure.main/background-color}`
 
 ```
 [:map
@@ -35,7 +35,7 @@ A thirty character string denoting the UI name for a dial
 
 [r-0-255 g-0-255 b-0-255 w?]
 
-### Input: `#{:dev.freeformsoftware.vu1-driver-clojure.main/dial-easing}
+### Input: `#{:dev.freeformsoftware.vu1-driver-clojure.main/dial-easing}`
 
 ```
 [:map
@@ -48,7 +48,7 @@ A thirty character string denoting the UI name for a dial
 Configure easing for the dial. Step is the absolute amount that 
            can be moved per period. Peroid is the number of MS between update events.
 
-### Input: `#{:dev.freeformsoftware.vu1-driver-clojure.main/backlight-easing}
+### Input: `#{:dev.freeformsoftware.vu1-driver-clojure.main/backlight-easing}`
 
 ```
 [:map
@@ -65,7 +65,7 @@ Configure easing for the backlight color. Step is the absolute amount that
 
 Get the easing config from the dial
 
-### Input: `#{:dev.freeformsoftware.vu1-driver-clojure.main/background-image}
+### Input: `#{:dev.freeformsoftware.vu1-driver-clojure.main/background-image}`
 
 ```
 [:map
