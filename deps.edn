@@ -1,8 +1,9 @@
-{:paths   ["src/main"]
+{:paths   ["src/main" "resources"]
  :deps    {metosin/malli              {:mvn/version "0.16.2"}
            com.fulcrologic/guardrails {:mvn/version "1.2.9"}
            clj-http/clj-http          {:mvn/version "3.13.0"}
-           cheshire/cheshire          {:mvn/version "5.13.0"}}
+           cheshire/cheshire          {:mvn/version "5.13.0"}
+           com.taoensso/encore        {:mvn/version "3.113.0"}}
  :aliases {:dev  {:extra-paths ["src/dev"]
                   :extra-deps  {nrepl/nrepl       {:mvn/version "1.2.0"}
                                 cider/cider-nrepl {:mvn/version "0.49.2"}}}

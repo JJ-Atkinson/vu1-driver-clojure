@@ -1,7 +1,13 @@
 (ns dev.freeformsoftware.vu1-driver-clojure.main
   (:require
    [clj-http.client :as client]
-   [clojure.set :as set]))
+   [clojure.set :as set]
+   [clojure.java.io :as jio]
+   [malli.core :as mc]
+   [malli.util :as mu]
+   [taoensso.encore :as enc])
+  (:import
+   (java.io File)))
 
 (def api-key "cTpAWYuRpA2zx75Yh961Cg")
 
@@ -27,6 +33,11 @@
   [{::input    #{::value}
     ::output   #{}
     ::doc      "A 0-100 value"
+    ::spec     [:map
+                [::value
+                 [:and int?
+                  [:>= 0]
+                  [:<= 100]]]]
     ::execute! (fn [params]
                  (die-if-status-bad!
                   (client/get
@@ -50,6 +61,10 @@
    {::input    #{::name}
     ::output   #{}
     ::doc      "A thirty character string denoting the UI name for a dial"
+    ::spec     [:map
+                [::name
+                 [:and string?
+                  [:fn #(< 0 (count %) 30)]]]]
     ::execute! (fn [params]
                  (die-if-status-bad!
                   (client/get
@@ -62,6 +77,9 @@
    {::input    #{::background-color}
     ::output   #{}
     ::doc      "[r-0-255 g-0-255 b-0-255 w?]"
+    ::spec     [:map
+                [::background-color
+                 [:vector [:and int? [:>= 0] [:< 256]]]]]
     ::execute! (fn [params]
                  (die-if-status-bad!
                   (client/get
@@ -74,30 +92,44 @@
                                    :white (get-in params [::input ::background-color 3] 0)}
                     :as           :json}))
                  {})}
-   {::input    #{::dial-easing}
-    ::output   #{}
-    ::doc      ""
+   {::input #{::dial-easing}
+    ::output #{}
+    ::doc
+    "Configure easing for the dial. Step is the absolute amount that 
+           can be moved per period. Peroid is the number of MS between update events."
+    ::spec [:map
+            [::dial-easing
+             [:map
+              [:step {:optional true} int?]
+              [:period {:optional true} int?]]]]
     ::execute! (fn [params]
                  (die-if-status-bad!
                   (client/get
                    (make-v0-dial-path-prefix
                     (assoc params ::extended-path "/easing/dial"))
-                   {:query-params {:key    (::api-key params)
-                                   :step   (get-in params [::input ::dial-easing :step])
-                                   :period (get-in params [::input ::dial-easing :period])}
+                   {:query-params (enc/assoc-some {:key (::api-key params)}
+                                                  :step   (get-in params [::input ::dial-easing :step])
+                                                  :period (get-in params [::input ::dial-easing :period]))
                     :as           :json}))
                  {})}
-   {::input    #{::backlight-easing}
-    ::output   #{}
-    ::doc      ""
+   {::input #{::backlight-easing}
+    ::output #{}
+    ::doc
+    "Configure easing for the backlight color. Step is the absolute amount that 
+           can be moved per period. Peroid is the number of MS between update events."
+    ::spec [:map
+            [::backlight-easing
+             [:map
+              [:step {:optional true} int?]
+              [:period {:optional true} int?]]]]
     ::execute! (fn [params]
                  (die-if-status-bad!
                   (client/get
                    (make-v0-dial-path-prefix
                     (assoc params ::extended-path "/easing/backlight"))
-                   {:query-params {:key    (::api-key params)
-                                   :step   (get-in params [::input ::backlight-easing :step])
-                                   :period (get-in params [::input ::backlight-easing :period])}
+                   {:query-params (enc/assoc-some {:key (::api-key params)}
+                                                  :step   (get-in params [::input ::backlight-easing :step])
+                                                  :period (get-in params [::input ::backlight-easing :period]))
                     :as           :json}))
                  {})}
    {::input    #{}
@@ -110,7 +142,23 @@
                                        {:query-params {:key (::api-key params)}
                                         :as           :json})
                                       (die-if-status-bad!)
-                                      (get-in [:body :data]))})}])
+                                      (get-in [:body :data]))})}
+   {::input    #{::background-image}
+    ::output   #{}
+    ::doc      "A jio/file (png preferably) of resolution 200x144"
+    ::spec     [:map
+                [::background-image [:fn #(instance? File %)]]]
+    ::execute! (fn [params]
+                 (die-if-status-bad!
+                  (client/post
+                   (make-v0-dial-path-prefix
+                    (assoc params ::extended-path "/image/set"))
+                   {:query-params {:key   api-key
+                                   :force true}
+                    :multipart    [{:name    "imgfile"
+                                    :content (get-in params [::input ::background-image])}]
+                    :as           :json}))
+                 {})}])
 
 (defn execute!
   [{::keys [input outputs] :as params}]
@@ -119,15 +167,23 @@
         api-paths   (filter (fn [x]
                               (or (seq (set/intersection input-set (::input x)))
                                   (seq (set/intersection outputs-set (::output x)))))
-                            dial-api-paths)]
-    (reduce (fn [acc {::keys [execute!]}]
-              (merge acc (execute! params)))
-            {}
-            api-paths)))
+                            dial-api-paths)
+        spec        [:map
+                     [::input
+                      (reduce mu/merge
+                              [:map]
+                              (keep ::spec api-paths))]]]
+    (println spec)
+    (if (mc/validate spec params)
+      (reduce (fn [acc {::keys [execute!]}]
+                (merge acc (execute! params)))
+              {}
+              api-paths)
+      {::validation-error (mc/explain spec params)
+       ::spec             spec})))
+
 
 (comment
-
-
 
   (for [value [8 57 33 86 99 1]]
     (do
@@ -137,14 +193,30 @@
       (Thread/sleep 1000)))
 
 
-  (execute! {::input    {::value            40
-                         ::name             "L-ref-1"
-                         ::background-color [255 255 255 255]}
-             ::dial-uid "840033000650564139323920"
+  (execute! {::input    {::value            80
+                         ;;  ::name             "L-ref-1"
+                         ::background-color [255 182 0 0]}
+             ::dial-uid "490026000650564139323920"
              ::api-key  api-key})
 
-  (execute! {::input    {::dial-easing {:step   1
-                                        :period 2000}
+  (for [id [;"840033000650564139323920"
+            "400028000650564139323920"
+            #_#_#_"490026000650564139323920"
+                "400028000650564139323920"
+              "8C002B000650564139323920"]]
+    (execute! {::input    {::value            80
+                           ;;  ::name             "L-ref-1"
+                           ::background-color [256 182 0 0]}
+               ::dial-uid id
+               ::api-key  api-key}))
+
+
+  (execute! {::input    {::background-image (jio/file "test2.png")}
+             ::dial-uid "400028000650564139323920"
+             ::api-key  api-key})
+
+  (execute! {::input    {::dial-easing {:step   10
+                                        :period 7000}
                         }
              ::dial-uid "840033000650564139323920"
              ::api-key  api-key})
